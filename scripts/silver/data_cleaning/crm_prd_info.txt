@@ -1,0 +1,46 @@
+-- Identify duplicate or null product IDs to ensure data integrity before transformation
+SELECT 
+cpi.prd_id , count(*)
+FROM crm_prd_info cpi 
+GROUP BY cpi.prd_id 
+HAVING  count(*) > 1 OR cpi.prd_id IS NULL;
+
+-- Retrieve unique category IDs from ERP table for mapping product keys to categories
+SELECT DISTINCT (id) FROM erp_px_cat_g1v2 epcgv ;
+
+-- Flag products with missing or invalid costs that could skew financial analysis
+SELECT prd_cost FROM crm_prd_info cpi WHERE cpi.prd_cost IS NULL OR cpi.prd_cost <0;
+
+-- Examine unique product line abbreviations to standardize into full names during load
+SELECT distinct(prd_line) FROM crm_prd_info cpi ;
+
+-- Detect products with illogical date ranges where end precedes start, indicating data entry errors
+SELECT * FROM crm_prd_info cpi WHERE cpi.prd_end_dt < cpi.prd_start_dt ;
+
+-- Transform and load cleaned product data into silver layer, standardizing formats and deriving missing end dates
+INSERT INTO silver.crm_prd_info (
+prd_id,
+cat_id,
+prd_key,
+prd_nm,
+prd_cost,
+prd_line,
+prd_start_dt,
+prd_end_dt
+)
+SELECT 
+cpi.prd_id ,
+REPLACE(substr(cpi.prd_key, 1, 5), '-', '_') AS cat_id,
+substr(cpi.prd_key, 7, length(cpi.prd_key)) AS prd_key,
+cpi.prd_nm ,
+coalesce(cpi.prd_cost, 0) AS prd_cost ,
+CASE WHEN upper(trim(cpi.prd_line)) = 'M' THEN 'Mountain'
+	WHEN upper(trim(cpi.prd_line)) = 'R' THEN 'Road'
+	WHEN upper(trim(cpi.prd_line)) = 'S' THEN 'Other Sales'
+	WHEN upper(trim(cpi.prd_line)) = 'T' THEN 'Touring'
+	ELSE 'n/a'
+END 
+	AS prd_line,
+cpi.prd_start_dt:: date  ,
+(lead(cpi.prd_start_dt) OVER(PARTITION BY cpi.prd_key ORDER BY cpi.prd_start_dt) - 1):: date AS prd_end_dt
+FROM crm_prd_info cpi ;
