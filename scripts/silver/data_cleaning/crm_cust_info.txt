@@ -79,6 +79,6 @@ t.cst_create_date
 FROM 
 	(SELECT * ,
 	row_number() OVER (PARTITION BY cci.cst_id ORDER BY cci.cst_create_date DESC) AS flag_last
-	FROM crm_cust_info cci 
+	FROM bronze.crm_cust_info cci 
 	WHERE cci.cst_id IS NOT NULL)t
 WHERE t.flag_last = 1;

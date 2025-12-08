@@ -43,4 +43,4 @@ END
 	AS prd_line,
 cpi.prd_start_dt:: date  ,
 (lead(cpi.prd_start_dt) OVER(PARTITION BY cpi.prd_key ORDER BY cpi.prd_start_dt) - 1):: date AS prd_end_dt
-FROM crm_prd_info cpi ;
+FROM bronze.crm_prd_info cpi ;
