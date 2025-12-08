@@ -9,6 +9,7 @@ Script Purpose:
 ===============================================================================
 */
 
+DROP TABLE IF EXISTS silver.crm_cust_info ;
 CREATE TABLE silver.crm_cust_info (
 	cst_id INT,
 	cst_key VARCHAR(50),
@@ -20,8 +21,10 @@ CREATE TABLE silver.crm_cust_info (
     dwh_create_date TIMESTAMP default now()
 );
 
+DROP TABLE IF EXISTS silver.crm_prd_info ;
 CREATE TABLE silver.crm_prd_info (
 	prd_id INT,
+	cat_id VARCHAR(50),
 	prd_key VARCHAR(50),
 	prd_nm VARCHAR(50),
 	prd_cost INT,
@@ -31,7 +34,7 @@ CREATE TABLE silver.crm_prd_info (
     dwh_create_date TIMESTAMP default now()
 );
 
-
+DROP TABLE IF EXISTS silver.crm_sales_details ;
 CREATE TABLE silver.crm_sales_details (
 	sls_ord_num VARCHAR(50),
 	sls_prd_key VARCHAR(50),
@@ -46,7 +49,7 @@ CREATE TABLE silver.crm_sales_details (
 );
 
 
-
+DROP TABLE IF EXISTS silver.erp_cust_az12 ;
 CREATE TABLE silver.erp_cust_az12 (
 	cid VARCHAR(50),
 	bdate DATE,
@@ -54,12 +57,14 @@ CREATE TABLE silver.erp_cust_az12 (
     dwh_create_date TIMESTAMP default now()
 );
 
+DROP TABLE IF EXISTS silver.erp_loc_a101 ;
 CREATE TABLE silver.erp_loc_a101 (
 	cid VARCHAR(50),
 	cntry VARCHAR(50),
     dwh_create_date TIMESTAMP default now()
 );
 
+DROP TABLE IF EXISTS silver.erp_px_cat_g1v2 ;
 CREATE TABLE silver.erp_px_cat_g1v2 (
 	id VARCHAR(50),
 	cat VARCHAR(50),

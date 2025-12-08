@@ -9,6 +9,7 @@ Script Purpose:
 ===============================================================================
 */
 
+DROP TABLE IF EXISTS bronze.crm_cust_info ;
 CREATE TABLE bronze.crm_cust_info (
 	cst_id INT,
 	cst_key VARCHAR(50),
@@ -19,6 +20,7 @@ CREATE TABLE bronze.crm_cust_info (
 	cst_create_date DATE
 );
 
+DROP TABLE IF EXISTS bronze.crm_prd_info ;
 CREATE TABLE bronze.crm_prd_info (
 	prd_id INT,
 	prd_key VARCHAR(50),
@@ -29,7 +31,7 @@ CREATE TABLE bronze.crm_prd_info (
 	prd_end_dt DATE
 );
 
-
+DROP TABLE IF EXISTS bronze.crm_sales_details ;
 CREATE TABLE bronze.crm_sales_details (
 	sls_ord_num VARCHAR(50),
 	sls_prd_key VARCHAR(50),
@@ -43,18 +45,20 @@ CREATE TABLE bronze.crm_sales_details (
 );
 
 
-
+DROP TABLE IF EXISTS bronze.erp_cust_az12 ;
 CREATE TABLE bronze.erp_cust_az12 (
 	cid VARCHAR(50),
 	bdate DATE,
 	gen VARCHAR(50)
 );
 
+DROP TABLE IF EXISTS bronze.erp_loc_a101 ;
 CREATE TABLE bronze.erp_loc_a101 (
 	cid VARCHAR(50),
 	cntry VARCHAR(50)
 );
 
+DROP TABLE IF EXISTS bronze.erp_px_cat_g1v2 ;
 CREATE TABLE bronze.erp_px_cat_g1v2 (
 	id VARCHAR(50),
 	cat VARCHAR(50),

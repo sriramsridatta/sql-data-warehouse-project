@@ -1,0 +1,84 @@
+-- Data Cleaning Queries for Silver Layer
+-- This file contains SQL queries to identify and clean data quality issues in the bronze layer tables before loading into silver layer.
+-- Run these queries to detect duplicates, nulls, and formatting issues.
+
+-- 1. Check for Duplicates and Null Primary Keys
+-- This query identifies customer IDs (cst_id) that appear more than once or are null.
+-- Duplicates can cause data integrity issues; nulls indicate missing key data.
+-- Expected: No results if data is clean.
+
+SELECT cci.cst_id, count(*)
+FROM crm_cust_info cci
+GROUP BY cci.cst_id
+HAVING count(*) >1 OR cci.cst_id IS NULL ;
+
+-- 2. Remove Duplicates and Keep Latest Record
+-- Identify all the unique rows which has primary key, inner query partitions the data and removes the one which have null
+-- outer query gives us only the latest data, if duplicates are present
+-- This query uses ROW_NUMBER to assign a rank based on creation date, keeping only the latest (flag_last = 1).
+-- Useful for deduplication in ETL processes.
+
+SELECT *
+FROM
+	(SELECT * ,
+	row_number() OVER (PARTITION BY cci.cst_id ORDER BY cci.cst_create_date DESC) AS flag_last
+	FROM crm_cust_info cci
+	WHERE cci.cst_id IS NOT NULL)t
+WHERE t.flag_last = 1;
+
+-- 3. Check for Unwanted Spaces in Names
+-- Check for unwanted spaces
+-- Expectation is no results
+-- Leading or trailing spaces in names can cause matching issues or display problems.
+-- TRIM removes spaces; if the field != TRIM(field), there are extra spaces.
+-- Fix by updating: UPDATE crm_cust_info SET cst_firstname = TRIM(cst_firstname) WHERE ...;
+
+SELECT cci.cst_firstname
+FROM crm_cust_info cci
+WHERE cci.cst_firstname != TRIM(cci.cst_firstname);
+
+SELECT cci.cst_lastname
+FROM crm_cust_info cci
+WHERE cci.cst_lastname != TRIM(cci.cst_lastname);
+
+
+--Data standardization and consistency
+--Convert to Male and Female
+
+-- 4. Check Distinct Values for Gender
+-- This query lists all unique values in the gender field (cst_gndr).
+-- Useful for data profiling to see what values exist (e.g., 'M', 'F', null, etc.).
+-- Helps identify inconsistencies or need for standardization.
+SELECT DISTINCT(cst_gndr)
+FROM crm_cust_info cci ;
+
+-- 5. Check Distinct Values for Marital Status
+-- This query lists all unique values in the marital status field (cst_marital_status).
+-- Useful for data profiling to see what values exist (e.g., 'S', 'M', null, etc.).
+-- Helps identify inconsistencies or need for standardization.
+SELECT DISTINCT(cci.cst_marital_status )
+FROM crm_cust_info cci ;
+
+-- Final query
+
+--INSERT INTO silver.crm_cust_info 
+SELECT 
+t.cst_id ,
+t.cst_key  ,
+TRIM(t.cst_firstname) AS cst_firstname ,
+TRIM(t.cst_lastname) AS cst_lastname,
+CASE WHEN UPPER(TRIM(t.cst_marital_status)) = 'S' THEN 'Single'
+	WHEN UPPER(TRIM(t.cst_marital_status)) = 'M' THEN 'Married'
+	ELSE 'n/a'
+END AS cst_marital_status,
+CASE WHEN UPPER(TRIM(t.cst_gndr)) = 'F' THEN 'Female'
+	WHEN UPPER(TRIM(t.cst_gndr)) = 'M' THEN 'Male'
+	ELSE 'n/a'
+END AS cst_gndr,
+t.cst_create_date 
+FROM 
+	(SELECT * ,
+	row_number() OVER (PARTITION BY cci.cst_id ORDER BY cci.cst_create_date DESC) AS flag_last
+	FROM crm_cust_info cci 
+	WHERE cci.cst_id IS NOT NULL)t
+WHERE t.flag_last = 1;
