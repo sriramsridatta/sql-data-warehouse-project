@@ -1,0 +1,21 @@
+-- Review silver customer info to verify dash removal in ERP location IDs
+SELECT * FROM silver.crm_cust_info cci ;
+
+-- Examine unique country codes to prepare for full name standardization
+SELECT DISTINCT cntry
+FROM erp_loc_a101
+ORDER BY cntry
+
+-- Transform and load ERP location data, removing dashes from IDs and expanding country abbreviations
+INSERT INTO silver.erp_loc_a101 (
+cid ,
+cntry
+)
+SELECT
+replace(ela.cid, '-', '') AS cid,
+CASE WHEN trim(ela.cntry) in ('DE') THEN 'Germany'
+	WHEN trim(ela.cntry) in ('US', 'USA') THEN 'United States'
+	WHEN trim(ela.cntry) = '' OR ela.cntry IS NULL THEN 'n/a'
+	ELSE trim(ela.cntry)
+END AS cntry
+FROM bronze.erp_loc_a101 ela ;
