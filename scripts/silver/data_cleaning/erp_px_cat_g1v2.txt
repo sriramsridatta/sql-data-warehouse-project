@@ -1,0 +1,22 @@
+-- Identify records with leading or trailing spaces in category fields for trimming
+SELECT * FROM erp_px_cat_g1v2
+WHERE cat != trim(cat) OR subcat != trim(subcat) OR maintenance != trim(maintenance);
+
+-- Examine unique values in each category field to assess data consistency and identify variations
+SELECT DISTINCT cat FROM erp_px_cat_g1v2 epcgv ;
+SELECT DISTINCT subcat FROM erp_px_cat_g1v2 epcgv ;
+SELECT DISTINCT maintenance FROM erp_px_cat_g1v2 epcgv ;
+
+-- Load ERP product category data into silver layer for downstream analysis
+INSERT INTO silver.erp_px_cat_g1v2 (
+	id ,
+	cat ,
+	subcat ,
+	maintenance
+)
+SELECT
+epcgv.id ,
+epcgv.cat ,
+epcgv.subcat ,
+epcgv.maintenance
+FROM bronze.erp_px_cat_g1v2 epcgv ;
