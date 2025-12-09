@@ -61,7 +61,7 @@ FROM crm_cust_info cci ;
 
 -- Final query
 
---INSERT INTO silver.crm_cust_info 
+INSERT INTO silver.crm_cust_info 
 SELECT 
 t.cst_id ,
 t.cst_key  ,
